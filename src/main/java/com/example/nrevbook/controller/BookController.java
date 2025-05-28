@@ -11,11 +11,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Books", description = "Operations on user-owned books")
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class BookController {
     private final BookService bookService;
     private final UserRepository userRepository;
 
+    @Operation(summary = "List all books for the logged-in user")
     @GetMapping
     public ResponseEntity<List<BookResponse>> listMyBooks(Authentication auth) {
         List<BookResponse> dtos = bookService
@@ -34,6 +38,7 @@ public class BookController {
         return ResponseEntity.ok(dtos);
     }
 
+    @Operation(summary = "Creates books for the logged-in user")
     @PostMapping
     public ResponseEntity<BookResponse> createBook(
             @Valid @RequestBody BookRequest req,
@@ -55,6 +60,7 @@ public class BookController {
                 .body(dto);
     }
 
+    @Operation(summary = "Gets a book with id for the logged-in user")
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getOne(
             @PathVariable Long id,
@@ -67,6 +73,7 @@ public class BookController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Edits a book with id for the logged-in user")
     @PutMapping("/{id}")
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable Long id,
@@ -84,6 +91,7 @@ public class BookController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Deletes a book with id for the logged-in user")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteBook(
             @PathVariable Long id,
