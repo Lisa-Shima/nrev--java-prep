@@ -8,6 +8,7 @@ import com.example.nrevbook.model.Role;
 import com.example.nrevbook.model.User;
 import com.example.nrevbook.repository.UserRepository;
 import com.example.nrevbook.security.JwtProvider;
+import com.example.nrevbook.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ public class AuthController {
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Operation(summary = "Register a new user")
     @PostMapping("/register")
@@ -36,13 +38,29 @@ public class AuthController {
                     .status(HttpStatus.CONFLICT)
                     .body("Username is already taken");
         }
+        if (userRepository.existsByEmail(req.getEmail())) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Email is already taken");
+        }
 
         User user = new User();
         user.setUsername(req.getUsername());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setEmail(req.getEmail());
         user.getRoles().add(Role.ROLE_USER);
 
         userRepository.save(user);
+
+        // send welcome email
+        emailService.sendSimpleMessage(
+                user.getEmail(),
+                "Welcome to BookManager!",
+                "Hi " + user.getUsername() + ",\n\n" +
+                        "Thank you for registering. You can now log in and start adding books!\n\n" +
+                        "Cheers,\nThe Team"
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

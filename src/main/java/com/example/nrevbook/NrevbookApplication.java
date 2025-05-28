@@ -24,6 +24,7 @@ public class NrevbookApplication implements CommandLineRunner {
 		if (!userRepository.existsByUsername("admin")) {
 			var admin = new User();
 			admin.setUsername("admin");
+			admin.setEmail("admin@gmail.com");
 			admin.setPassword(encoder.encode("Admin@123"));
 			admin.getRoles().add(Role.ROLE_ADMIN);
 			userRepository.save(admin);
