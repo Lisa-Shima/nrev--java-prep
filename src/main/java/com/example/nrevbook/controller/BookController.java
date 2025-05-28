@@ -2,12 +2,17 @@ package com.example.nrevbook.controller;
 
 import com.example.nrevbook.dto.BookRequest;
 import com.example.nrevbook.dto.BookResponse;
+import com.example.nrevbook.dto.PagedResponse;
 import com.example.nrevbook.model.Book;
 import com.example.nrevbook.model.User;
 import com.example.nrevbook.repository.UserRepository;
 import com.example.nrevbook.service.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -28,14 +33,28 @@ public class BookController {
 
     @Operation(summary = "List all books for the logged-in user")
     @GetMapping
-    public ResponseEntity<List<BookResponse>> listMyBooks(Authentication auth) {
-        List<BookResponse> dtos = bookService
-                .getBooksForUser(auth.getName())
-                .stream()
-                .map(b -> new BookResponse(b.getId(), b.getTitle(), b.getAuthor()))
-                .collect(Collectors.toList());
+    public ResponseEntity<PagedResponse<BookResponse>> listMyBooks(
+            Authentication auth,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(dtos);
+        Pageable pg = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        Page<Book> books = bookService.getBooksForUser(auth.getName(), pg);
+
+        List<BookResponse> dtos = books.getContent().stream()
+                .map(b -> new BookResponse(b.getId(), b.getTitle(), b.getAuthor()))
+                .toList();
+
+        PagedResponse<BookResponse> resp = new PagedResponse<>(
+                dtos,
+                books.getNumber(),
+                books.getSize(),
+                books.getTotalElements(),
+                books.getTotalPages(),
+                books.isLast()
+        );
+
+        return ResponseEntity.ok(resp);
     }
 
     @Operation(summary = "Creates books for the logged-in user")

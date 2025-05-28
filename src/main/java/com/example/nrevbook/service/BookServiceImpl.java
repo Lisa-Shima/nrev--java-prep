@@ -5,6 +5,8 @@ import com.example.nrevbook.model.User;
 import com.example.nrevbook.repository.BookRepository;
 import com.example.nrevbook.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +30,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> getBooksForUser(String username) {
-        // no log for reads
+    public Page<Book> getBooksForUser(String username, Pageable pageable) {
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return bookRepo.findByUser(user);
+        return bookRepo.findByUser(user, pageable);
     }
 
     @Override
