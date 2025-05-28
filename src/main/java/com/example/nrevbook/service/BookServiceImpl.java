@@ -18,14 +18,18 @@ import java.util.Optional;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
+    private final AuditLogService auditLogService;   // ← new
 
     @Override
     public Book createBook(Book book) {
-        return bookRepo.save(book);
+        Book saved = bookRepo.save(book);
+        auditLogService.log("Book", saved.getId(), "CREATE");
+        return saved;
     }
 
     @Override
     public List<Book> getBooksForUser(String username) {
+        // no log for reads
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return bookRepo.findByUser(user);
@@ -40,11 +44,14 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Book updateBook(Book book) {
-        return bookRepo.save(book);
+        Book updated = bookRepo.save(book);
+        auditLogService.log("Book", updated.getId(), "UPDATE");
+        return updated;
     }
 
     @Override
     public void deleteBook(Long bookId) {
         bookRepo.deleteById(bookId);
+        auditLogService.log("Book", bookId, "DELETE");
     }
 }

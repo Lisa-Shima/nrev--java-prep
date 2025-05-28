@@ -8,6 +8,7 @@ import com.example.nrevbook.model.Role;
 import com.example.nrevbook.model.User;
 import com.example.nrevbook.repository.UserRepository;
 import com.example.nrevbook.security.JwtProvider;
+import com.example.nrevbook.service.AuditLogService;
 import com.example.nrevbook.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AuditLogService auditLogService;     // ← injected
 
     @Operation(summary = "Register a new user")
     @PostMapping("/register")
@@ -52,6 +54,9 @@ public class AuthController {
 
         userRepository.save(user);
 
+        // record creation in AuditLog
+        auditLogService.log("User", user.getId(), "CREATE");
+
         // send welcome email
         emailService.sendSimpleMessage(
                 user.getEmail(),
@@ -70,6 +75,12 @@ public class AuthController {
         var authToken = new UsernamePasswordAuthenticationToken(
                 req.getUsername(), req.getPassword());
         var auth = authenticationManager.authenticate(authToken);
+        // fetch the user so we have its ID
+        User user = userRepository.findByUsername(req.getUsername())
+                .orElseThrow();
+
+        // record login in AuditLog
+        auditLogService.log("User", user.getId(), "LOGIN");
 
         String jwt = jwtProvider.generateToken(req.getUsername());
         return ResponseEntity.ok(new AuthResponse(jwt));

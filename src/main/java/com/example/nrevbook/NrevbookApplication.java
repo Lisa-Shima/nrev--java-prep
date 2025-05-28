@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 @RequiredArgsConstructor
 public class NrevbookApplication implements CommandLineRunner {
 	private final UserRepository userRepository;

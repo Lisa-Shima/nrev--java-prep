@@ -2,14 +2,21 @@ package com.example.nrevbook.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)        // ← enable auditing
 @Table(name = "users")
 @Data
 @NoArgsConstructor
@@ -36,6 +43,21 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     private Set<Role> roles = new HashSet<>();
+
+    // --- Auditing fields ---
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdDate;
+
+    @LastModifiedDate
+    private Instant lastModifiedDate;
+
+    @CreatedBy
+    @Column(nullable = false, updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String lastModifiedBy;
 
     // --- Methods from UserDetails ---
     @Override

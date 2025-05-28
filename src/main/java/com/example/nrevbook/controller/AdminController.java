@@ -1,9 +1,11 @@
 package com.example.nrevbook.controller;
 
 import com.example.nrevbook.dto.AdminBookResponse;
+import com.example.nrevbook.dto.AuditLogResponse;
 import com.example.nrevbook.dto.BookResponse;
 import com.example.nrevbook.model.Book;
 import com.example.nrevbook.model.User;
+import com.example.nrevbook.repository.AuditLogRepository;
 import com.example.nrevbook.repository.BookRepository;
 import com.example.nrevbook.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class AdminController {
     private final UserRepository userRepo;
     private final BookRepository bookRepo;
+    private final AuditLogRepository auditLogRepo;
 
     // List all users (you probably already have this)
     @Operation(summary = "Getting all users")
@@ -42,6 +45,20 @@ public class AdminController {
                         b.getAuthor(),
                         // unwrap the user proxy to just get the username
                         b.getUser().getUsername()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/logs")
+    public List<AuditLogResponse> listAuditLogs() {
+        return auditLogRepo.findAll().stream()
+                .map(l -> new AuditLogResponse(
+                        l.getId(),
+                        l.getEntityType(),
+                        l.getEntityId(),
+                        l.getAction(),
+                        l.getUsername(),
+                        l.getTimestamp()
                 ))
                 .collect(Collectors.toList());
     }
